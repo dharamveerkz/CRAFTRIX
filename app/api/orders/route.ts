@@ -7,32 +7,32 @@ import { sendTelegramNotification } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {
   try {
-    // 🔍 DEBUG: Log environment variables at runtime (Vercel-specific)
+    // 🔐 ENV DEBUG (Vercel runtime check)
     console.log("🔐 ENV CHECK:", {
-      MONGODB_URI: process.env.MONGODB_URI ? "✅ SET" : "❌ MISSING",
+      MONGODB_URI: process.env.MONGODB_URI ? "SET" : "MISSING",
       ENCRYPTION_KEY: process.env.ENCRYPTION_KEY
-        ? `✅ SET (${process.env.ENCRYPTION_KEY.length} chars)`
-        : "❌ MISSING",
+        ? `SET (${process.env.ENCRYPTION_KEY.length} chars)`
+        : "MISSING",
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN
-        ? "✅ SET"
-        : "❌ MISSING",
-      TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID
-        ? `✅ SET (value: ${process.env.TELEGRAM_CHAT_ID})`
-        : "❌ MISSING",
+        ? `SET (${process.env.TELEGRAM_BOT_TOKEN.slice(0, 10)}...)`
+        : "MISSING",
+      TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || "MISSING",
     });
 
     const body = await req.json();
-    console.log("📥 Request body:", {
+
+    console.log("📥 Incoming Request:", {
       name: body.name,
       contact: body.contact,
       garmentType: body.garmentType,
+      quantity: body.quantity,
     });
 
     const validated = orderSchema.parse(body);
 
     console.log("🔌 Connecting to MongoDB...");
     await connectDB();
-    console.log("✅ MongoDB connected");
+    console.log("✅ MongoDB Connected");
 
     const orderPayload = {
       name: validated.name.trim(),
@@ -46,35 +46,44 @@ export async function POST(req: NextRequest) {
     };
 
     const savedOrder = await Order.create(orderPayload);
-    console.log("✅ Order saved to DB:", savedOrder._id);
 
-    // 🔔 Telegram notification (with inline error logging)
+    console.log("✅ Order saved:", savedOrder._id);
+
+    // 🔔 Telegram (SAFE + DEBUG VERSION)
     if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
       console.log("📤 Sending Telegram notification...");
-      sendTelegramNotification({
-        name: validated.name,
-        contact: validated.contact,
-        garment: validated.garmentType,
-        qty: validated.quantity,
-        deadline: validated.deadline,
-        notes: validated.notes,
-      })
-        .then(() => console.log("✅ Telegram notification sent"))
-        .catch((err) => console.error("⚠️ Telegram failed:", err.message));
+
+      try {
+        await sendTelegramNotification({
+          name: validated.name,
+          contact: validated.contact,
+          garment: validated.garmentType,
+          qty: validated.quantity,
+          deadline: validated.deadline,
+          notes: validated.notes,
+        });
+
+        console.log("✅ Telegram sent successfully");
+      } catch (err: any) {
+        console.error("⚠️ Telegram failed:", err?.message || err);
+      }
     } else {
-      console.warn("⚠️ Skipping Telegram: credentials missing");
+      console.warn("⚠️ Telegram skipped: missing credentials");
     }
 
     return NextResponse.json(
-      { success: true, id: savedOrder._id, message: "Order received" },
+      {
+        success: true,
+        id: savedOrder._id,
+        message: "Order received successfully",
+      },
       { status: 201 },
     );
   } catch (error: any) {
-    console.error("🚨 Order API Error:", {
+    console.error("🚨 API ERROR:", {
       name: error.name,
       message: error.message,
       code: error.code,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
 
     if (error.name === "ZodError") {
@@ -83,6 +92,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
