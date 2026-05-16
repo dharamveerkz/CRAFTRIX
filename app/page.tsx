@@ -157,6 +157,7 @@ export default function HomePage() {
                 garments based on your design, fabric, and requirements.
               </p>
             </div>
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
@@ -164,55 +165,75 @@ export default function HomePage() {
                   name: "Custom T-Shirts (All Types)",
                   spec: "Cotton · Oversized · Dry-Fit · Printing Supported",
                   price: "₹199+",
+                  image: "/prototypes/tshirt.jpeg",
+                  emoji: "👕",
                 },
                 {
                   id: "02",
                   name: "Custom Shirts",
                   spec: "Formal · Casual · Office Wear · Branding Available",
                   price: "₹399+",
+                  image: "/prototypes/shirt.jpeg",
+                  emoji: "👔",
                 },
                 {
                   id: "03",
                   name: "Sports / Team Kits",
                   spec: "Dri-Fit · Jersey Printing · Full Custom Design",
                   price: "₹499+",
+                  image: "/prototypes/kit.jpeg",
+                  emoji: "🏃",
                 },
                 {
                   id: "04",
                   name: "School & Uniform Sets",
                   spec: "Full Uniform Manufacturing · Logo · Batch Orders",
                   price: "₹299+",
+                  image: "/prototypes/uniform.jpeg",
+                  emoji: "🏫",
                 },
                 {
                   id: "05",
                   name: "Custom Trousers",
                   spec: "Formal · Slim Fit · Stretch Fabric · Bulk Orders",
                   price: "₹499+",
+                  image: "/prototypes/trouser.jpeg",
+                  emoji: "👖",
                 },
                 {
                   id: "06",
                   name: "Fully Custom Garments",
                   spec: "You send design → We manufacture from scratch",
                   price: "Quote Based",
+                  image: "/prototypes/custom.jpeg",
+                  emoji: "✨",
                 },
               ].map((p) => (
                 <div
                   key={p.id}
-                  className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition"
+                  className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition group"
                 >
-                  <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-6xl">
-                    {p.id === "01"
-                      ? "👕"
-                      : p.id === "02"
-                        ? "👔"
-                        : p.id === "03"
-                          ? "🏃"
-                          : p.id === "04"
-                            ? "🏫"
-                            : p.id === "05"
-                              ? "👖"
-                              : "✨"}
+                  {/* Image Container */}
+                  <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden relative">
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      onError={(e) => {
+                        // Fallback to emoji if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        target.parentElement!.innerHTML = `
+                  <div class="w-full h-full flex items-center justify-center text-6xl">
+                    ${p.emoji}
                   </div>
+                `;
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Content */}
                   <div className="p-5">
                     <div className="text-xs font-medium text-gray-400 mb-1">
                       Manufacturing Category {p.id}
@@ -226,6 +247,8 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
+            {/* CTA */}
             <div className="text-center mt-10">
               <a
                 href="#orders"
@@ -366,16 +389,19 @@ export default function HomePage() {
                   Payment Methods (After Confirmation)
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {["💳 UPI", "🏦 Bank Transfer", "💰 Cash (Bulk Orders)"].map(
-                    (m, i) => (
-                      <span
-                        key={i}
-                        className="bg-gray-800 px-3 py-1.5 rounded-lg text-sm text-gray-300"
-                      >
-                        {m}
-                      </span>
-                    ),
-                  )}
+                  {[
+                    "Credit/Debit Card",
+                    "UPI",
+                    "Bank Transfer",
+                    "Net Banking",
+                  ].map((m, i) => (
+                    <span
+                      key={i}
+                      className="bg-gray-800 px-3 py-1.5 rounded-lg text-sm text-gray-300"
+                    >
+                      {m}
+                    </span>
+                  ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
                   * Final pricing is shared after discussion based on quantity &

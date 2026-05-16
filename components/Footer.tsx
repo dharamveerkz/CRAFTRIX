@@ -207,10 +207,10 @@ export default function Footer() {
           © {currentYear} CRAFTRIX Garments Enterprises. All rights reserved.
         </p>
         <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-          <span>💳 DEBIT/credit card</span>
+          <span>💳 Debit/Credit Card</span>
           <span>🏦 Bank Transfer</span>
-          <span>💵 upi</span>
-          <span>🌐 net banking</span>
+          <span>💵 UPI</span>
+          <span>🌐 Net Banking</span>
         </div>
       </div>
     </footer>
