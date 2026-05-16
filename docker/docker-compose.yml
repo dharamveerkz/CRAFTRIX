@@ -1,0 +1,44 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: craftrix-app
+    restart: always
+    env_file: .env.local
+    networks:
+      - craftrix-net
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: craftrix-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - craftrix-net
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  craftrix-net:
+    driver: bridge
