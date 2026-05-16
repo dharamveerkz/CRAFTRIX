@@ -16,35 +16,55 @@ export async function sendTelegramNotification(data: TelegramPayload) {
     return;
   }
 
-  const message = `📦 *NEW ORDER REQUEST*
-👤 *Name:* ${data.name}
-📞 *Contact:* ${data.contact}
-👕 *Garment:* ${data.garment}
-📊 *Quantity:* ${data.qty}
-📅 *Deadline:* ${data.deadline || "Flexible"}
-📝 *Notes:* ${data.notes || "None"}
-⏰ *Received:* ${new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" })}
-🔗 *Reply:* /order`;
+  const message = `
+<b>📦 NEW ORDER REQUEST</b>
+
+<b>👤 Name:</b> ${data.name}
+<b>📞 Contact:</b> ${data.contact}
+<b>👕 Garment:</b> ${data.garment}
+<b>📊 Quantity:</b> ${data.qty}
+<b>📅 Deadline:</b> ${data.deadline || "Flexible"}
+<b>📝 Notes:</b> ${data.notes || "None"}
+<b>⏰ Received:</b> ${new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  })}
+<b>🔗 Reply:</b> /order
+`;
 
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
         disable_web_page_preview: true,
       }),
     });
 
-    const result = await res.json();
-    if (!result.ok)
+    const text = await res.text();
+
+    console.log("📨 Telegram Response:", text);
+
+    let result;
+
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid Telegram JSON response");
+    }
+
+    if (!result.ok) {
       throw new Error(result.description || "Failed to send Telegram message");
+    }
+
+    console.log("✅ Telegram notification sent successfully");
   } catch (error) {
     console.error("🚨 Telegram Notification Error:", error);
-    // Fallback: log to console or trigger email alert in production
   }
 }
